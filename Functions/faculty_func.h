@@ -150,4 +150,40 @@ bool updateFacultyDetails(struct faculty modUser)
         return result;
 }
 
+bool changeFacultyPass(struct faculty modUser)
+{
+        int i = modUser.userID;
+        int fd = open("/home/nikhil/Academia/Database/Faculty.data", O_RDWR, 0744);
+        bool result = false;
+
+        int fl1;
+        struct flock lock;
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;
+        lock.l_start = (i) * sizeof(struct faculty);
+        lock.l_len = sizeof(struct faculty);
+        lock.l_pid = getpid();
+
+        fl1 = fcntl(fd, F_SETLKW, &lock);
+
+        struct faculty currUser;
+        lseek(fd, (i) * sizeof(struct faculty), SEEK_SET);
+        read(fd, &currUser, sizeof(struct faculty));
+
+        strcpy(currUser.password, modUser.password);
+
+        lseek(fd,(-1)*sizeof(struct faculty), SEEK_CUR);
+        int j = write(fd, &currUser, sizeof(struct faculty));
+        if (j != 0)
+                result = true;
+        else
+                result = false;
+        
+        lock.l_type=F_UNLCK;
+        fcntl(fd,F_SETLK,&lock);
+
+        close(fd);
+        return result;
+}
+
 #endif

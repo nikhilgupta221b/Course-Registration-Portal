@@ -104,11 +104,47 @@ void serverTask(int nsd)
         read(nsd,&select,sizeof(int));
         // student
         if (option == 1){
-
+            if (select == 1){
+                
+            } 
+            else if (select == 2){
+                
+            } 
+            else if (select == 3){
+                
+            } 
+            else if (select == 4){
+                
+            } 
+            else if (select == 5){
+                struct student modifyStudent;
+                read(nsd,&modifyStudent,sizeof(struct student));
+                result=changeStudentPass(modifyStudent);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 6) break;
         }
         // faculty
         else if (option == 2){
-
+            if (select == 1){
+                
+            } 
+            else if (select == 2){
+                
+            } 
+            else if (select == 3){
+                
+            } 
+            else if (select == 4){
+                
+            } 
+            else if (select == 5){
+                struct faculty modifyFaculty;
+                read(nsd,&modifyFaculty,sizeof(struct faculty));
+                result=changeFacultyPass(modifyFaculty);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 6) break;
         }
         // admin
         else if (option == 3){

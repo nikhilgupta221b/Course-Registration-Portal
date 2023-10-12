@@ -12,6 +12,7 @@
 #include "./Structures/student.h"
 #include "./Structures/faculty.h"
 #include "./Structures/admin.h"
+#include "./Structures/course.h"
 
 void showMenu(int sd);
 void chooseOption(int sd);
@@ -398,6 +399,73 @@ void modifyFaculty(int sd)
     return;
 }
 
+// change student password
+void changeStudentPassword(int sd)
+{
+    int select = 5;
+    bool result;
+
+    write(sd, &select, sizeof(int));
+
+    struct student modifyStudent;
+    printf("Enter the Student User ID to change password : ");
+    scanf("%d", &modifyStudent.userID);
+
+    printf("New Password(max 10 characters) : ");
+    char *pass = getpass("");
+    strcpy(modifyStudent.password, pass);
+
+    write(sd, &modifyStudent, sizeof(struct student));
+
+    read(sd, &result, sizeof(result));
+
+    if (!result)
+    {
+        printf("Error changing the password,please re-check the User ID!\n\n");
+    }
+    else
+    {
+        printf("Succesfully changed the password!\n\n");
+    }
+    showMenu(sd);
+    return;
+}
+
+// change faculty password
+void changeFacultyPassword(int sd)
+{
+    int select = 5;
+    bool result;
+
+    write(sd, &select, sizeof(int));
+
+    struct faculty modifyFaculty;
+    printf("Enter the Faculty User ID to be modified : ");
+    scanf("%d", &modifyFaculty.userID);
+
+    printf("New Password(max 10 characters) : ");
+    char *pass = getpass("");
+    strcpy(modifyFaculty.password, pass);
+
+    write(sd, &modifyFaculty, sizeof(struct faculty));
+
+    read(sd, &result, sizeof(result));
+
+    if (!result)
+    {
+        printf("Error changing the faculty password,please re-check the User ID!\n\n");
+    }
+    else
+    {
+        printf("Succesfully changed the password!\n\n");
+    }
+    showMenu(sd);
+    return;
+}
+
+
+
+
 void showMenu(int sd)
 {
     int select;
@@ -431,7 +499,7 @@ void showMenu(int sd)
             // enrolledCourse(sd);
             break;
         case 5:
-            // changePassword(sd);
+            changeStudentPassword(sd);
             break;
         case 6:
             write(sd, &select, sizeof(int));
@@ -461,19 +529,19 @@ void showMenu(int sd)
         switch (select)
         {
         case 1:
-            // viewCourses(sd);
+            // viewOfferedCourses(sd);
             break;
         case 2:
-            // enrollCourse(sd);
+            //addNewCourse(sd);
             break;
         case 3:
-            // dropCourse(sd);
+            // removeOfferedCourse(sd);
             break;
         case 4:
-            // enrolledCourse(sd);
+            // updateCourseDetails(sd);
             break;
         case 5:
-            // changePassword(sd);
+            changeFacultyPassword(sd);
             break;
         case 6:
             write(sd, &select, sizeof(int));
