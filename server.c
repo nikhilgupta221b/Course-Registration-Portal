@@ -21,7 +21,7 @@
 bool checkAdmin(struct admin currUser)
 {
     int i = currUser.userID;
-    int fd = open("/home/Nikhil/Academia/Data/Admin.data", O_RDONLY, 0744);
+    int fd = open("/home/nikhil/Academia/Database/Admin.data", O_RDONLY, 0744);
     bool result;
     struct admin temp;
 
@@ -53,6 +53,7 @@ void serverTask(int nsd)
 {
     int msgLength, select, type, option, userType, currUserID;
     bool result;
+    // login verification
     while (1)
     {
         // read what client has chosen from initial menu
@@ -98,6 +99,75 @@ void serverTask(int nsd)
         }
         if (result) break;
     }
+    // internal menus
+    while(1){
+        read(nsd,&select,sizeof(int));
+        // student
+        if (option == 1){
+
+        }
+        // faculty
+        else if (option == 2){
+
+        }
+        // admin
+        else if (option == 3){
+            if (select == 1){
+                struct student newStudent;
+                read(nsd,&newStudent,sizeof(struct student));
+                result = addStudent(newStudent, nsd);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 2){
+                struct student searchStudent;
+                int userID;
+                read(nsd,&userID,sizeof(int));
+                searchStudent = searchStudentRecord(userID);
+                write(nsd,&searchStudent,sizeof(struct student));
+            } 
+            else if (select == 3){
+                struct faculty newFaculty;
+                read(nsd,&newFaculty,sizeof(struct faculty));
+                result = addFaculty(newFaculty, nsd);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 4){
+                struct faculty searchFaculty;
+                int userID;
+                read(nsd,&userID,sizeof(int));
+                searchFaculty = searchFacultyRecord(userID);
+                write(nsd,&searchFaculty,sizeof(struct faculty));
+            } 
+            else if (select == 5){
+                struct student activateStudent;
+                read(nsd,&activateStudent,sizeof(struct student));
+                result=activateStudentStatus(activateStudent);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 6){
+                struct student blockStudent;
+                read(nsd,&blockStudent,sizeof(struct student));
+                result=blockStudentStatus(blockStudent);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 7){
+                struct student modifyStudent;
+                read(nsd,&modifyStudent,sizeof(struct student));
+                result=updateStudentDetails(modifyStudent);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 8){
+                struct faculty modifyFaculty;
+                read(nsd,&modifyFaculty,sizeof(struct faculty));
+                result=updateFacultyDetails(modifyFaculty);
+                write(nsd,&result,sizeof(result));
+            } 
+            else if (select == 9) break;
+        }
+    }
+    close(nsd);
+    write(1, "Client session Ended\n", sizeof("Client session Ended\n"));
+    return;
 }
 int main()
 {
