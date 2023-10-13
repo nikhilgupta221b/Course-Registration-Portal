@@ -1,6 +1,7 @@
 #ifndef FACULTY_USER
 #define FACULTY_USER
 
+// search and show details of faculty
 struct faculty searchFacultyRecord(int ID)
 {
         int i = ID;
@@ -30,6 +31,7 @@ struct faculty searchFacultyRecord(int ID)
         return currUser;
 }
 
+// faculty login verification
 bool checkFaculty(struct faculty currUser)
 {
         int i = currUser.userID;
@@ -61,6 +63,7 @@ bool checkFaculty(struct faculty currUser)
         return result;
 }
 
+// add new faculty by admin
 bool addFaculty(struct faculty record, int sd)
 {
         int fd = open("/home/nikhil/Academia/Database/Faculty.data", O_RDWR, 0744);
@@ -113,6 +116,7 @@ bool addFaculty(struct faculty record, int sd)
         return result;
 }
 
+// update faculty details by admin
 bool updateFacultyDetails(struct faculty modUser)
 {
         int i = modUser.userID;
@@ -150,6 +154,7 @@ bool updateFacultyDetails(struct faculty modUser)
         return result;
 }
 
+// chage faculty password
 bool changeFacultyPass(struct faculty modUser)
 {
         int i = modUser.userID;
@@ -184,6 +189,128 @@ bool changeFacultyPass(struct faculty modUser)
 
         close(fd);
         return result;
+}
+
+// faculty add new course
+bool addNewCourse(struct course record, int sd){
+        
+        int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR, 0744);
+
+        struct course lastCourse;
+        int flag = 0;
+
+        if (fd == -1 && errno == ENOENT)
+        {
+                fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR | O_CREAT | O_APPEND, 0744);
+                record.courseID = 0;
+                flag = 1;
+        }
+
+        bool result;
+
+        int fl1;
+        char wrBuff[1000];
+        bzero(wrBuff, sizeof(wrBuff));
+        
+        struct flock lock;
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_END;
+        lock.l_start = (-1) * sizeof(struct course);
+        lock.l_len = sizeof(struct course);
+        lock.l_pid = getpid();
+
+        fl1 = fcntl(fd, F_SETLKW, &lock);
+
+        lseek(fd, (-1) * sizeof(struct course), SEEK_END);
+
+        read(fd, &lastCourse, sizeof(struct course));
+
+        if (flag == 0)
+        {
+                record.courseID = lastCourse.courseID + 1;
+        }
+        
+        printf("Course ID = %d\n", record.courseID);
+        sprintf(wrBuff, "%s%d\n", "Course ID of your new Course is ", record.courseID);
+        int j = write(fd, &record, sizeof(struct course));
+        if (j != 0)
+                result = true;
+        else
+                result = false;
+
+        lock.l_type = F_UNLCK;
+        fcntl(fd, F_SETLK, &lock);
+
+        close(fd);
+        write(sd, wrBuff, sizeof(wrBuff));
+        return result;
+}
+
+// update course details by faculty
+bool updateCourseDetails(struct course modCourse)
+{
+        int i = modCourse.courseID;
+        int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR, 0744);
+        bool result = false;
+
+        int fl1;
+        struct flock lock;
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;
+        lock.l_start = (i) * sizeof(struct course);
+        lock.l_len = sizeof(struct course);
+        lock.l_pid = getpid();
+
+        fl1 = fcntl(fd, F_SETLKW, &lock);
+
+        struct course currCourse;
+        lseek(fd, (i) * sizeof(struct course), SEEK_SET);
+        read(fd, &currCourse, sizeof(struct course));
+
+        int change_in_seats = currCourse.seats - modCourse.seats;
+        strcpy(currCourse.name, modCourse.name);
+        currCourse.seats = modCourse.seats;
+        currCourse.available_seats = currCourse.available_seats - change_in_seats;
+
+        lseek(fd,(-1)*sizeof(struct course), SEEK_CUR);
+        int j = write(fd, &currCourse, sizeof(struct course));
+        if (j != 0)
+                result = true;
+        else
+                result = false;
+        
+        lock.l_type=F_UNLCK;
+        fcntl(fd,F_SETLK,&lock);
+
+        close(fd);
+        return result;
+}
+
+void viewOfferedCourses(int facultyID, int sd){
+        int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDONLY, 0744);
+        struct course buffer;
+        ssize_t bytesRead;
+        int fID = facultyID;
+        // reading one by one record
+        int count=0;
+        printf("Faculty ID to send courses : %d\n:", fID);
+        // count number of course offered by faculty
+        while ((bytesRead = read(fd, &buffer, sizeof(struct course))) > 0) {
+                if (buffer.facultyID == fID) count++;
+        }
+
+        // send this count to client
+        write(sd,&count,sizeof(int));
+        
+        lseek(fd, 0, SEEK_SET);
+
+        // sending course details to client
+        while ((bytesRead = read(fd, &buffer, sizeof(struct course))) > 0) {
+                if (buffer.facultyID == fID){
+                        write(sd,&buffer,sizeof(struct course));
+                }
+        }
+        close(fd);
 }
 
 #endif

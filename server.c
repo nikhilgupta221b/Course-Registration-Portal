@@ -1,3 +1,13 @@
+/*
+============================================================================
+Name : server.c
+Author : Nikhil Gupta 
+Description : This file consists of code which listens for client connections
+              and connect to it through socket. Used forking for handling multiple clients  
+============================================================================
+*/
+
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<sys/types.h>
@@ -12,6 +22,7 @@
 #include"./Structures/student.h"
 #include"./Structures/faculty.h"
 #include"./Structures/admin.h"
+#include"./Structures/course.h"
 
 #include"./Functions/student_func.h"
 #include"./Functions/faculty_func.h"
@@ -112,10 +123,12 @@ void serverTask(int nsd)
             } 
             else if (select == 3){
                 
-            } 
+            }
+            // 
             else if (select == 4){
                 
-            } 
+            }
+            // change student password
             else if (select == 5){
                 struct student modifyStudent;
                 read(nsd,&modifyStudent,sizeof(struct student));
@@ -126,18 +139,30 @@ void serverTask(int nsd)
         }
         // faculty
         else if (option == 2){
+            //view offered courses
             if (select == 1){
-                
-            } 
+                int facultyID;
+                read(nsd,&facultyID,sizeof(int));
+                viewOfferedCourses(facultyID, nsd);
+            }
+            // faculty add new course
             else if (select == 2){
-                
+                struct course addCourse;
+                read(nsd,&addCourse,sizeof(struct course));
+                result=addNewCourse(addCourse, nsd);
+                write(nsd,&result,sizeof(result));
             } 
             else if (select == 3){
                 
-            } 
+            }
+            // update course details
             else if (select == 4){
-                
+                struct course modifyCourse;
+                read(nsd,&modifyCourse,sizeof(struct course));
+                result=updateCourseDetails(modifyCourse);
+                write(nsd,&result,sizeof(result));
             } 
+            // change faculty password
             else if (select == 5){
                 struct faculty modifyFaculty;
                 read(nsd,&modifyFaculty,sizeof(struct faculty));

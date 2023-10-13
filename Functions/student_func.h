@@ -21,8 +21,6 @@ struct student searchStudentRecord(int ID)
         read(fd, &currUser, sizeof(struct student));
 
         lock.l_type = F_UNLCK;
-        printf("Press Enter to relese Lock from View Details\n");
-        getchar();
 
         fcntl(fd, F_SETLK, &lock);
 
@@ -224,6 +222,7 @@ bool addStudent(struct student record, int sd)
         int fl1;
         char wrBuff[1000];
         bzero(wrBuff, sizeof(wrBuff));
+        
         struct flock lock;
         lock.l_type = F_WRLCK;
         lock.l_whence = SEEK_END;

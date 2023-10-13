@@ -1,3 +1,13 @@
+/*
+============================================================================
+Name : client.c
+Author : Nikhil Gupta 
+Description : This file consists of client code which connects to the server
+              and give inputs for further processing   
+============================================================================
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -463,6 +473,120 @@ void changeFacultyPassword(int sd)
     return;
 }
 
+// faculty add new course
+void addNewCourse(int sd){
+    int select = 2;
+    bool result;
+
+    char rdBuff[1000];
+    bzero(rdBuff, sizeof(rdBuff));
+
+    write(sd, &select, sizeof(int));
+
+    struct course addCourse;
+    printf("Enter name of the course to add : ");
+    scanf(" %[^\n]", addCourse.name);
+    printf("Enter your faculty ID : ");
+    scanf("%d", &addCourse.facultyID);
+    int seats;
+    printf("Enter number of seats : ");
+    scanf("%d", &seats);
+    addCourse.seats = seats;
+    addCourse.available_seats = seats;
+
+    write(sd, &addCourse, sizeof(struct course));
+    read(sd, rdBuff, sizeof(rdBuff));
+    read(sd, &result, sizeof(result));
+
+    if (!result)
+    {
+        printf("Error in adding course,please re-check if you entered details correctly!\n\n");
+    }
+    else
+    {
+        printf("Succesfully added the course!\n\n");
+    }
+
+    printf("%s\n", rdBuff);
+
+    showMenu(sd);
+    return;
+}
+
+// faculty update course details
+void updateCourseDetails(int sd)
+{
+    int select = 4;
+    bool result;
+
+    write(sd, &select, sizeof(int));
+
+    struct course modifyCourse;
+    printf("Enter the Course ID to be modified : ");
+    scanf("%d", &modifyCourse.courseID);
+
+    printf("Enter Updated Name of the Course : ");
+    scanf(" %[^\n]", modifyCourse.name);
+    printf("Enter new number of available seats : ");
+    scanf("%d", &modifyCourse.seats);
+
+    write(sd, &modifyCourse, sizeof(struct course));
+
+    read(sd, &result, sizeof(result));
+
+    if (!result)
+    {
+        printf("Error modifying the course details,please re-check the course ID!\n\n");
+    }
+    else
+    {
+        printf("Succesfully modified the course details!\n\n");
+    }
+    
+    showMenu(sd);
+    return;
+}
+
+// view courses offered by faculty
+void viewOfferedCourses(int sd)
+{
+    int select = 1;
+    int count;
+    // int len;
+    // bool result;
+    write(sd, &select, sizeof(int));
+
+    struct course searchedCourse;
+    int facultyID;
+    printf("Enter your faculty ID: ");
+    scanf("%d", &facultyID);
+    printf("Entered Faculty ID : %d\n\n", facultyID);
+
+    write(sd, &facultyID, sizeof(int));
+
+    // len = read(sd, &searchedCourse, sizeof(struct faculty));
+
+    // if (len == 0)
+    // {
+    //     printf("Please re-check the Course ID!\n\n");
+    // }
+    // else
+    // {
+    //     printf("User ID : %d\n", searchFaculty.userID);
+    //     printf("Name : %s\n\n", searchFaculty.name);
+    // }
+    read(sd,&count,sizeof(int));
+
+    printf("You are currently offering %d courses.\n", count);
+    for (int i = 0; i < count; count++){
+        read(sd,&searchedCourse,sizeof(struct course));
+        printf("\nCourse ID: %d",searchedCourse.courseID);
+        printf("\nCourse Name: %s",searchedCourse.name);
+        printf("\n");
+    }
+
+    showMenu(sd);
+}
 
 
 
@@ -529,16 +653,16 @@ void showMenu(int sd)
         switch (select)
         {
         case 1:
-            // viewOfferedCourses(sd);
+            viewOfferedCourses(sd);
             break;
         case 2:
-            //addNewCourse(sd);
+            addNewCourse(sd);
             break;
         case 3:
             // removeOfferedCourse(sd);
             break;
         case 4:
-            // updateCourseDetails(sd);
+            updateCourseDetails(sd);
             break;
         case 5:
             changeFacultyPassword(sd);
