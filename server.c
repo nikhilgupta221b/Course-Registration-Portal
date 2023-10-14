@@ -153,7 +153,9 @@ void serverTask(int nsd)
                 write(nsd,&result,sizeof(result));
             } 
             else if (select == 3){
-                
+                int courseID;
+                read(nsd,&courseID,sizeof(int));
+                deleteCourse(courseID, nsd);
             }
             // update course details
             else if (select == 4){

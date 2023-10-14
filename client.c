@@ -478,12 +478,11 @@ void addNewCourse(int sd){
     int select = 2;
     bool result;
 
-    char rdBuff[1000];
-    bzero(rdBuff, sizeof(rdBuff));
-
     write(sd, &select, sizeof(int));
 
     struct course addCourse;
+    printf("Enter the Course ID : ");
+    scanf("%d", &addCourse.courseID);
     printf("Enter name of the course to add : ");
     scanf(" %[^\n]", addCourse.name);
     printf("Enter your faculty ID : ");
@@ -495,7 +494,6 @@ void addNewCourse(int sd){
     addCourse.available_seats = seats;
 
     write(sd, &addCourse, sizeof(struct course));
-    read(sd, rdBuff, sizeof(rdBuff));
     read(sd, &result, sizeof(result));
 
     if (!result)
@@ -506,8 +504,6 @@ void addNewCourse(int sd){
     {
         printf("Succesfully added the course!\n\n");
     }
-
-    printf("%s\n", rdBuff);
 
     showMenu(sd);
     return;
@@ -578,16 +574,34 @@ void viewOfferedCourses(int sd)
     read(sd,&count,sizeof(int));
 
     printf("You are currently offering %d courses.\n", count);
-    for (int i = 0; i < count; count++){
+    for (int i = 0; i < count; i++){
         read(sd,&searchedCourse,sizeof(struct course));
         printf("\nCourse ID: %d",searchedCourse.courseID);
         printf("\nCourse Name: %s",searchedCourse.name);
+        printf("\nAvailable Seats: %d",searchedCourse.available_seats);
         printf("\n");
     }
-
+    printf("\n");
     showMenu(sd);
 }
 
+// remove offerd course
+void removeOfferedCourse(int sd){
+    int select = 3;
+    write(sd, &select, sizeof(int));
+
+    int courseID;
+
+    printf("Enter the course ID to delete: ");
+    scanf("%d", &courseID);
+    printf("Entered Course ID : %d\n\n", courseID);
+    
+    write(sd, &courseID, sizeof(int));
+
+    printf("Course deleted successfully.\n\n");
+
+    showMenu(sd);
+}
 
 
 void showMenu(int sd)
@@ -659,7 +673,7 @@ void showMenu(int sd)
             addNewCourse(sd);
             break;
         case 3:
-            // removeOfferedCourse(sd);
+            removeOfferedCourse(sd);
             break;
         case 4:
             updateCourseDetails(sd);

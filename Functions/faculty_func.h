@@ -194,96 +194,45 @@ bool changeFacultyPass(struct faculty modUser)
 // faculty add new course
 bool addNewCourse(struct course record, int sd){
         
-        int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR, 0744);
+        int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR | O_CREAT | O_APPEND, 0744);
 
-        struct course lastCourse;
-        int flag = 0;
-
-        if (fd == -1 && errno == ENOENT)
-        {
-                fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR | O_CREAT | O_APPEND, 0744);
-                record.courseID = 0;
-                flag = 1;
-        }
-
+        
         bool result;
 
-        int fl1;
-        char wrBuff[1000];
-        bzero(wrBuff, sizeof(wrBuff));
-        
-        struct flock lock;
-        lock.l_type = F_WRLCK;
-        lock.l_whence = SEEK_END;
-        lock.l_start = (-1) * sizeof(struct course);
-        lock.l_len = sizeof(struct course);
-        lock.l_pid = getpid();
-
-        fl1 = fcntl(fd, F_SETLKW, &lock);
-
-        lseek(fd, (-1) * sizeof(struct course), SEEK_END);
-
-        read(fd, &lastCourse, sizeof(struct course));
-
-        if (flag == 0)
-        {
-                record.courseID = lastCourse.courseID + 1;
-        }
-        
-        printf("Course ID = %d\n", record.courseID);
-        sprintf(wrBuff, "%s%d\n", "Course ID of your new Course is ", record.courseID);
+        lseek(fd, 0, SEEK_END);
         int j = write(fd, &record, sizeof(struct course));
         if (j != 0)
                 result = true;
         else
                 result = false;
 
-        lock.l_type = F_UNLCK;
-        fcntl(fd, F_SETLK, &lock);
-
         close(fd);
-        write(sd, wrBuff, sizeof(wrBuff));
         return result;
 }
 
 // update course details by faculty
 bool updateCourseDetails(struct course modCourse)
 {
-        int i = modCourse.courseID;
+        int cID = modCourse.courseID;
         int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR, 0744);
         bool result = false;
-
-        int fl1;
-        struct flock lock;
-        lock.l_type = F_WRLCK;
-        lock.l_whence = SEEK_SET;
-        lock.l_start = (i) * sizeof(struct course);
-        lock.l_len = sizeof(struct course);
-        lock.l_pid = getpid();
-
-        fl1 = fcntl(fd, F_SETLKW, &lock);
-
+        ssize_t bytesRead;
         struct course currCourse;
-        lseek(fd, (i) * sizeof(struct course), SEEK_SET);
-        read(fd, &currCourse, sizeof(struct course));
 
-        int change_in_seats = currCourse.seats - modCourse.seats;
-        strcpy(currCourse.name, modCourse.name);
-        currCourse.seats = modCourse.seats;
-        currCourse.available_seats = currCourse.available_seats - change_in_seats;
+        while ((bytesRead = read(fd, &currCourse, sizeof(struct course))) > 0) {
+                if (currCourse.courseID == cID){
+                        int change_in_seats = currCourse.seats - modCourse.seats;
+                        strcpy(currCourse.name, modCourse.name);
+                        currCourse.seats = modCourse.seats;
+                        currCourse.available_seats = currCourse.available_seats - change_in_seats;
 
-        lseek(fd,(-1)*sizeof(struct course), SEEK_CUR);
-        int j = write(fd, &currCourse, sizeof(struct course));
-        if (j != 0)
-                result = true;
-        else
-                result = false;
-        
-        lock.l_type=F_UNLCK;
-        fcntl(fd,F_SETLK,&lock);
-
+                        lseek(fd, -sizeof(struct course), SEEK_CUR);
+                        write(fd, &currCourse, sizeof(struct course));
+                        return true;
+                }
+        }
         close(fd);
-        return result;
+        return false;
 }
 
 void viewOfferedCourses(int facultyID, int sd){
@@ -311,6 +260,31 @@ void viewOfferedCourses(int facultyID, int sd){
                 }
         }
         close(fd);
+}
+
+// delete offered course
+void deleteCourse(int courseID, int sd){
+        int fd = open("/home/nikhil/Academia/Database/Course.data", O_RDWR, 0744);
+        int tmp_fd = open("/home/nikhil/Academia/Database/Course.data.tmp", O_RDWR | O_CREAT, 0744);
+        
+        int cID = courseID;
+        struct course buffer;
+        ssize_t bytesRead;
+        bool found = false;
+
+        
+
+        // sending course details to client
+        while ((bytesRead = read(fd, &buffer, sizeof(struct course))) > 0) {
+                if (buffer.courseID != cID){
+                        lseek(tmp_fd, 0, SEEK_END);
+                        write(tmp_fd,&buffer,sizeof(struct course));
+                }
+        }
+        remove("/home/nikhil/Academia/Database/Course.data");
+        rename("/home/nikhil/Academia/Database/Course.data.tmp", "/home/nikhil/Academia/Database/Course.data");
+        close(fd);
+        close(tmp_fd);
 }
 
 #endif
