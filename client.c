@@ -1,12 +1,11 @@
 /*
 ============================================================================
 Name : client.c
-Author : Nikhil Gupta 
+Author : Nikhil Gupta
 Description : This file consists of client code which connects to the server
-              and give inputs for further processing   
+              and give inputs for further processing
 ============================================================================
 */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +22,7 @@ Description : This file consists of client code which connects to the server
 #include "./Structures/faculty.h"
 #include "./Structures/admin.h"
 #include "./Structures/course.h"
+#include "./Structures/enrollment.h"
 
 void showMenu(int sd);
 void chooseOption(int sd);
@@ -59,7 +59,7 @@ void attemptStudentLogin(int sd)
     }
     else
     {
-        printf("Succesfully logged in!\n\n");
+        printf("\nSuccesfully logged in!\n\n");
     }
     return;
 }
@@ -94,7 +94,7 @@ void attemptFacultyLogin(int sd)
     }
     else
     {
-        printf("Succesfully logged in!\n\n");
+        printf("\nSuccesfully logged in!\n\n");
     }
     return;
 }
@@ -123,7 +123,7 @@ void attemptAdminLogin(int sd)
     }
     else
     {
-        printf("Succesfully logged in!\n\n");
+        printf("\nSuccesfully logged in!\n\n");
     }
     return;
 }
@@ -369,7 +369,7 @@ void modifyStudent(int sd)
     }
     else
     {
-        printf("Succesfully modified the student details!\n\n");
+        printf("\nSuccesfully modified the student details!\n\n");
     }
     showMenu(sd);
     return;
@@ -403,7 +403,7 @@ void modifyFaculty(int sd)
     }
     else
     {
-        printf("Succesfully modified the faculty details!\n\n");
+        printf("\nSuccesfully modified the faculty details!\n\n");
     }
     showMenu(sd);
     return;
@@ -474,7 +474,8 @@ void changeFacultyPassword(int sd)
 }
 
 // faculty add new course
-void addNewCourse(int sd){
+void addNewCourse(int sd)
+{
     int select = 2;
     bool result;
 
@@ -538,7 +539,7 @@ void updateCourseDetails(int sd)
     {
         printf("Succesfully modified the course details!\n\n");
     }
-    
+
     showMenu(sd);
     return;
 }
@@ -548,8 +549,7 @@ void viewOfferedCourses(int sd)
 {
     int select = 1;
     int count;
-    // int len;
-    // bool result;
+
     write(sd, &select, sizeof(int));
 
     struct course searchedCourse;
@@ -560,25 +560,15 @@ void viewOfferedCourses(int sd)
 
     write(sd, &facultyID, sizeof(int));
 
-    // len = read(sd, &searchedCourse, sizeof(struct faculty));
-
-    // if (len == 0)
-    // {
-    //     printf("Please re-check the Course ID!\n\n");
-    // }
-    // else
-    // {
-    //     printf("User ID : %d\n", searchFaculty.userID);
-    //     printf("Name : %s\n\n", searchFaculty.name);
-    // }
-    read(sd,&count,sizeof(int));
+    read(sd, &count, sizeof(int));
 
     printf("You are currently offering %d courses.\n", count);
-    for (int i = 0; i < count; i++){
-        read(sd,&searchedCourse,sizeof(struct course));
-        printf("\nCourse ID: %d",searchedCourse.courseID);
-        printf("\nCourse Name: %s",searchedCourse.name);
-        printf("\nAvailable Seats: %d",searchedCourse.available_seats);
+    for (int i = 0; i < count; i++)
+    {
+        read(sd, &searchedCourse, sizeof(struct course));
+        printf("\nCourse ID: %d", searchedCourse.courseID);
+        printf("\nCourse Name: %s", searchedCourse.name);
+        printf("\nTotal seats: %d", searchedCourse.seats);
         printf("\n");
     }
     printf("\n");
@@ -586,7 +576,8 @@ void viewOfferedCourses(int sd)
 }
 
 // remove offerd course
-void removeOfferedCourse(int sd){
+void removeOfferedCourse(int sd)
+{
     int select = 3;
     write(sd, &select, sizeof(int));
 
@@ -595,7 +586,7 @@ void removeOfferedCourse(int sd){
     printf("Enter the course ID to delete: ");
     scanf("%d", &courseID);
     printf("Entered Course ID : %d\n\n", courseID);
-    
+
     write(sd, &courseID, sizeof(int));
 
     printf("Course deleted successfully.\n\n");
@@ -603,6 +594,111 @@ void removeOfferedCourse(int sd){
     showMenu(sd);
 }
 
+// student view all courses
+void viewAllCourses(int sd)
+{
+    int select = 1;
+    int count;
+
+    write(sd, &select, sizeof(int));
+
+    struct course foundCourse;
+
+    read(sd, &count, sizeof(int));
+
+    printf("\nTotal available courses are %d.\n", count);
+    for (int i = 0; i < count; i++)
+    {
+        read(sd, &foundCourse, sizeof(struct course));
+        printf("\nCourse ID: %d", foundCourse.courseID);
+        printf("\nCourse Name: %s", foundCourse.name);
+        printf("\nAvailable Seats: %d", foundCourse.available_seats);
+        printf("\n");
+    }
+    printf("\n");
+    showMenu(sd);
+}
+
+// student enroll into a new course
+void enrollCourse(int sd)
+{
+    int select = 2;
+    bool result;
+    int available_seats = 0;
+    write(sd, &select, sizeof(int));
+
+    struct enrollment enroll;
+    printf("Enter your student ID : ");
+    scanf("%d", &enroll.studentID);
+    printf("Enter Course ID to enroll : ");
+    scanf("%d", &enroll.courseID);
+
+    write(sd, &enroll, sizeof(struct enrollment));
+    read(sd, &available_seats, sizeof(int));
+    printf("\nNumber of available seats: %d\n", available_seats);
+
+    read(sd, &result, sizeof(result));
+
+    if (result == true)
+    {
+        printf("Succesfully enrolled in course!\n\n");
+    }
+    else
+    {
+        printf("Unable to enroll!\n\n");
+    }
+
+    showMenu(sd);
+}
+
+// student unenroll from a course
+void dropCourse(int sd)
+{
+    int select = 3;
+    write(sd, &select, sizeof(int));
+
+    struct enrollment dropEnroll;
+
+    printf("Enter your student ID : ");
+    scanf("%d", &dropEnroll.studentID);
+
+    printf("Enter the course ID you want to drop : ");
+    scanf("%d", &dropEnroll.courseID);
+
+    write(sd, &dropEnroll, sizeof(struct enrollment));
+
+    printf("\nUnenrolled successfully.\n\n");
+
+    showMenu(sd);
+}
+
+// view courses enrolled courses by the student
+void viewEnrolledCourses(int sd)
+{
+    int select = 4;
+    int count = 0;
+
+    write(sd, &select, sizeof(int));
+
+    struct enrollment searchedEnrollment;
+    int studentID;
+    printf("Enter your Student ID: ");
+    scanf("%d", &studentID);
+
+    write(sd, &studentID, sizeof(int));
+
+    read(sd, &count, sizeof(int));
+
+    printf("\nYou are currently enrolled in %d courses.\n", count);
+    for (int i = 0; i < count; i++)
+    {
+        read(sd, &searchedEnrollment, sizeof(struct enrollment));
+        printf("\nCourse ID: %d", searchedEnrollment.courseID);
+        printf("\n");
+    }
+    printf("\n");
+    showMenu(sd);
+}
 
 void showMenu(int sd)
 {
@@ -625,16 +721,16 @@ void showMenu(int sd)
         switch (select)
         {
         case 1:
-            // viewCourses(sd);
+            viewAllCourses(sd);
             break;
         case 2:
-            // enrollCourse(sd);
+            enrollCourse(sd);
             break;
         case 3:
-            // dropCourse(sd);
+            dropCourse(sd);
             break;
         case 4:
-            // enrolledCourse(sd);
+            viewEnrolledCourses(sd);
             break;
         case 5:
             changeStudentPassword(sd);

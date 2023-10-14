@@ -1,7 +1,8 @@
 #ifndef COURSE_STRUCT
 #define COURSE_STRUCT
 
-struct course{
+struct course
+{
     int courseID;
     char name[25];
     int facultyID;

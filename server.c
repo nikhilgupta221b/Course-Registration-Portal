@@ -1,32 +1,33 @@
 /*
 ============================================================================
 Name : server.c
-Author : Nikhil Gupta 
+Author : Nikhil Gupta
 Description : This file consists of code which listens for client connections
-              and connect to it through socket. Used forking for handling multiple clients  
+              and connect to it through socket. Used forking for handling multiple clients
 ============================================================================
 */
 
-
-#include<stdio.h>
-#include<stdlib.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h> 
-#include<unistd.h>
-#include<stdbool.h>
-#include<string.h>
-#include<fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <string.h>
+#include <fcntl.h>
 #include <errno.h>
 
-#include"./Structures/student.h"
-#include"./Structures/faculty.h"
-#include"./Structures/admin.h"
-#include"./Structures/course.h"
+#include "./Structures/student.h"
+#include "./Structures/faculty.h"
+#include "./Structures/admin.h"
+#include "./Structures/course.h"
+#include "./Structures/enrollment.h"
 
-#include"./Functions/student_func.h"
-#include"./Functions/faculty_func.h"
-
+#include "./Functions/student_func.h"
+#include "./Functions/faculty_func.h"
+#include "./Functions/course_func.h"
+#include "./Functions/enroll_func.h"
 
 // check admin
 bool checkAdmin(struct admin currUser)
@@ -104,128 +105,162 @@ void serverTask(int nsd)
             result = checkAdmin(currUser3);
             write(nsd, &result, sizeof(result));
         }
-        else {
+        else
+        {
             result = false;
-            write(nsd,&result,sizeof(result));
+            write(nsd, &result, sizeof(result));
         }
-        if (result) break;
+        if (result)
+            break;
     }
     // internal menus
-    while(1){
-        read(nsd,&select,sizeof(int));
+    while (1)
+    {
+        read(nsd, &select, sizeof(int));
         // student
-        if (option == 1){
-            if (select == 1){
-                
-            } 
-            else if (select == 2){
-                
-            } 
-            else if (select == 3){
-                
+        if (option == 1)
+        {
+            if (select == 1)
+            {
+                viewAllCourses(nsd);
             }
-            // 
-            else if (select == 4){
-                
+            else if (select == 2)
+            {
+                struct enrollment enroll;
+                read(nsd, &enroll, sizeof(struct enrollment));
+                result = enrollStudentCourse(enroll, nsd);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 3)
+            {
+                struct enrollment removeEnrollment;
+                read(nsd, &removeEnrollment, sizeof(struct enrollment));
+                deleteEnrollment(removeEnrollment, nsd);
+            }
+            //
+            else if (select == 4)
+            {
+                int studentID;
+                read(nsd, &studentID, sizeof(int));
+                viewEnrolledCourses(studentID, nsd);
             }
             // change student password
-            else if (select == 5){
+            else if (select == 5)
+            {
                 struct student modifyStudent;
-                read(nsd,&modifyStudent,sizeof(struct student));
-                result=changeStudentPass(modifyStudent);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 6) break;
+                read(nsd, &modifyStudent, sizeof(struct student));
+                result = changeStudentPass(modifyStudent);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 6)
+                break;
         }
         // faculty
-        else if (option == 2){
-            //view offered courses
-            if (select == 1){
+        else if (option == 2)
+        {
+            // view offered courses
+            if (select == 1)
+            {
                 int facultyID;
-                read(nsd,&facultyID,sizeof(int));
+                read(nsd, &facultyID, sizeof(int));
                 viewOfferedCourses(facultyID, nsd);
             }
             // faculty add new course
-            else if (select == 2){
+            else if (select == 2)
+            {
                 struct course addCourse;
-                read(nsd,&addCourse,sizeof(struct course));
-                result=addNewCourse(addCourse, nsd);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 3){
+                read(nsd, &addCourse, sizeof(struct course));
+                result = addNewCourse(addCourse, nsd);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 3)
+            {
                 int courseID;
-                read(nsd,&courseID,sizeof(int));
+                read(nsd, &courseID, sizeof(int));
                 deleteCourse(courseID, nsd);
             }
             // update course details
-            else if (select == 4){
+            else if (select == 4)
+            {
                 struct course modifyCourse;
-                read(nsd,&modifyCourse,sizeof(struct course));
-                result=updateCourseDetails(modifyCourse);
-                write(nsd,&result,sizeof(result));
-            } 
+                read(nsd, &modifyCourse, sizeof(struct course));
+                result = updateCourseDetails(modifyCourse);
+                write(nsd, &result, sizeof(result));
+            }
             // change faculty password
-            else if (select == 5){
+            else if (select == 5)
+            {
                 struct faculty modifyFaculty;
-                read(nsd,&modifyFaculty,sizeof(struct faculty));
-                result=changeFacultyPass(modifyFaculty);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 6) break;
+                read(nsd, &modifyFaculty, sizeof(struct faculty));
+                result = changeFacultyPass(modifyFaculty);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 6)
+                break;
         }
         // admin
-        else if (option == 3){
-            if (select == 1){
+        else if (option == 3)
+        {
+            if (select == 1)
+            {
                 struct student newStudent;
-                read(nsd,&newStudent,sizeof(struct student));
+                read(nsd, &newStudent, sizeof(struct student));
                 result = addStudent(newStudent, nsd);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 2){
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 2)
+            {
                 struct student searchStudent;
                 int userID;
-                read(nsd,&userID,sizeof(int));
+                read(nsd, &userID, sizeof(int));
                 searchStudent = searchStudentRecord(userID);
-                write(nsd,&searchStudent,sizeof(struct student));
-            } 
-            else if (select == 3){
+                write(nsd, &searchStudent, sizeof(struct student));
+            }
+            else if (select == 3)
+            {
                 struct faculty newFaculty;
-                read(nsd,&newFaculty,sizeof(struct faculty));
+                read(nsd, &newFaculty, sizeof(struct faculty));
                 result = addFaculty(newFaculty, nsd);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 4){
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 4)
+            {
                 struct faculty searchFaculty;
                 int userID;
-                read(nsd,&userID,sizeof(int));
+                read(nsd, &userID, sizeof(int));
                 searchFaculty = searchFacultyRecord(userID);
-                write(nsd,&searchFaculty,sizeof(struct faculty));
-            } 
-            else if (select == 5){
+                write(nsd, &searchFaculty, sizeof(struct faculty));
+            }
+            else if (select == 5)
+            {
                 struct student activateStudent;
-                read(nsd,&activateStudent,sizeof(struct student));
-                result=activateStudentStatus(activateStudent);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 6){
+                read(nsd, &activateStudent, sizeof(struct student));
+                result = activateStudentStatus(activateStudent);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 6)
+            {
                 struct student blockStudent;
-                read(nsd,&blockStudent,sizeof(struct student));
-                result=blockStudentStatus(blockStudent);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 7){
+                read(nsd, &blockStudent, sizeof(struct student));
+                result = blockStudentStatus(blockStudent);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 7)
+            {
                 struct student modifyStudent;
-                read(nsd,&modifyStudent,sizeof(struct student));
-                result=updateStudentDetails(modifyStudent);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 8){
+                read(nsd, &modifyStudent, sizeof(struct student));
+                result = updateStudentDetails(modifyStudent);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 8)
+            {
                 struct faculty modifyFaculty;
-                read(nsd,&modifyFaculty,sizeof(struct faculty));
-                result=updateFacultyDetails(modifyFaculty);
-                write(nsd,&result,sizeof(result));
-            } 
-            else if (select == 9) break;
+                read(nsd, &modifyFaculty, sizeof(struct faculty));
+                result = updateFacultyDetails(modifyFaculty);
+                write(nsd, &result, sizeof(result));
+            }
+            else if (select == 9)
+                break;
         }
     }
     close(nsd);
