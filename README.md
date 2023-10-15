@@ -38,9 +38,6 @@ cc client.c -o client.out
 <br>
 
 ⚫ <b><i>Output:</i></b>
-
-<br>
-
 <b>Starting Application -</b>
 - Create an Admin account
 # ![InitClient](./Outputs/01.CreateAdmin.png)
