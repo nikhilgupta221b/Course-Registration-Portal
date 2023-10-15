@@ -29,11 +29,13 @@ void chooseOption(int sd);
 
 int option, currUserID;
 
-// Attempt Student Login
+// attempt student login
 void attemptStudentLogin(int sd)
 {
     bool result;
     struct student currUser;
+    ssize_t write_res;
+    ssize_t read_res;
 
     printf("Student ID : ");
     scanf("%d", &currUser.userID);
@@ -45,30 +47,46 @@ void attemptStudentLogin(int sd)
 
     getchar();
 
-    // send selected option & data to server
-    write(sd, &option, sizeof(int));
-    write(sd, &currUser, sizeof(struct student));
+    write_res = write(sd, &option, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
 
-    // read response of server
-    read(sd, &result, sizeof(result));
+    write_res = write(sd, &currUser, sizeof(struct student));
+    if (write_res < 0 || write_res != sizeof(struct student))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read failed");
+        exit(EXIT_FAILURE);
+    }
 
     if (!result)
     {
-        printf("Invalid login!\nEither your Password didn't match OR your Account is Deleted\n");
+        printf("\nUnable to Login!\nEither your password didn't match or your account is deleted.\n\n");
         chooseOption(sd);
     }
     else
     {
-        printf("\nSuccesfully logged in!\n\n");
+        printf("\nSuccessfully logged in!\n\n");
     }
     return;
 }
 
-// Attempt Faculty Login
+// attempt faculty login
 void attemptFacultyLogin(int sd)
 {
     bool result;
     struct faculty currUser;
+    ssize_t write_res;
+    ssize_t read_res;
 
     printf("Faculty ID : ");
     scanf("%d", &currUser.userID);
@@ -80,30 +98,47 @@ void attemptFacultyLogin(int sd)
 
     getchar();
 
-    // send selected option & data to server
-    write(sd, &option, sizeof(int));
-    write(sd, &currUser, sizeof(struct faculty));
+    write_res = write(sd, &option, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
 
-    // read response of server
-    read(sd, &result, sizeof(result));
+    write_res = write(sd, &currUser, sizeof(struct faculty));
+    if (write_res < 0 || write_res != sizeof(struct faculty))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read failed");
+        exit(EXIT_FAILURE); // Exit or handle the error as required
+    }
 
     if (!result)
     {
-        printf("Invalid login!\nEither your Password didn't match OR your Account is Deleted\n");
+        printf("\nUnable to Login!\nEither your password didn't match or your account is deleted.\n");
         chooseOption(sd);
     }
     else
     {
-        printf("\nSuccesfully logged in!\n\n");
+        printf("\nSuccessfully logged in!\n\n");
     }
     return;
 }
 
-// Login Attempt Admin
+// attempt admin login
 void attemptAdminLogin(int sd)
 {
     bool result;
     struct admin currUser;
+    ssize_t write_res;
+    ssize_t read_res;
+
     printf("Admin ID : ");
     scanf("%d", &currUser.userID);
     currUserID = currUser.userID;
@@ -111,33 +146,48 @@ void attemptAdminLogin(int sd)
     char *pass = getpass("");
     strcpy(currUser.password, pass);
 
-    write(sd, &option, sizeof(int));
-    write(sd, &currUser, sizeof(struct admin));
+    write_res = write(sd, &option, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
 
-    read(sd, &result, sizeof(result));
+    write_res = write(sd, &currUser, sizeof(struct admin));
+    if (write_res < 0 || write_res != sizeof(struct admin))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read failed");
+        exit(EXIT_FAILURE);
+    }
 
     if (!result)
     {
-        printf("Invalid login!\nEither your Password didn't match OR your Account is Deleted\n");
+        printf("\nUnable to Login!\nEither your password didn't match or your account is deleted.\n");
         chooseOption(sd);
     }
     else
     {
-        printf("\nSuccesfully logged in!\n\n");
+        printf("\nSuccessfully logged in!\n\n");
     }
     return;
 }
 
-// Choose Type of User
+// choose type of user
 void chooseOption(int sd)
 {
     printf("1 : Student Login\n");
     printf("2 : Faculty Login\n");
     printf("3 : Admin Login\n");
-    printf("Choose an option : ");
+    printf("\nChoose an option : ");
 
     scanf("%d", &option);
-
     printf("Selected Option : %d\n", option);
 
     switch (option)
@@ -159,15 +209,477 @@ void chooseOption(int sd)
     return;
 }
 
-// add student
+// student view all courses
+void viewAllCourses(int sd)
+{
+    int select = 1;
+    int count;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct course foundCourse;
+
+    read_res = read(sd, &count, sizeof(int));
+    if (read_res < 0)
+    {
+        perror("read failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("\nTotal available courses are %d.\n", count);
+    for (int i = 0; i < count; i++)
+    {
+        read_res = read(sd, &foundCourse, sizeof(struct course));
+        if (read_res < 0)
+        {
+            perror("read failed");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("\nCourse ID: %d", foundCourse.courseID);
+        printf("\nCourse Name: %s", foundCourse.name);
+        printf("\nAvailable Seats: %d", foundCourse.available_seats);
+        printf("\n");
+    }
+    printf("\n");
+    showMenu(sd);
+}
+
+// student enroll into a new course
+void enrollCourse(int sd)
+{
+    int select = 2;
+    bool result;
+    int available_seats = 0;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct enrollment enroll;
+
+    printf("Enter your student ID : ");
+    scanf("%d", &enroll.studentID);
+    printf("Enter Course ID to enroll : ");
+    scanf("%d", &enroll.courseID);
+
+    write_res = write(sd, &enroll, sizeof(struct enrollment));
+    if (write_res < 0 || write_res != sizeof(struct enrollment))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &available_seats, sizeof(int));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("\nNumber of available seats: %d\n", available_seats);
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (result == true)
+    {
+        printf("Successfully enrolled in course!\n\n");
+    }
+    else
+    {
+        printf("Unable to enroll!\n\n");
+    }
+
+    showMenu(sd);
+}
+
+// student unenroll from a course
+void dropCourse(int sd)
+{
+    int select = 3;
+    ssize_t write_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct enrollment dropEnroll;
+
+    printf("Enter your student ID : ");
+    scanf("%d", &dropEnroll.studentID);
+
+    printf("Enter the course ID you want to drop : ");
+    scanf("%d", &dropEnroll.courseID);
+
+    write_res = write(sd, &dropEnroll, sizeof(struct enrollment));
+    if (write_res < 0 || write_res != sizeof(struct enrollment))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("\nUnenrolled successfully.\n\n");
+
+    showMenu(sd);
+}
+
+// student view all enrolled courses
+void viewEnrolledCourses(int sd)
+{
+    int select = 4;
+    int count = 0;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct enrollment searchedEnrollment;
+    int studentID;
+    printf("Enter your Student ID: ");
+    scanf("%d", &studentID);
+
+    write_res = write(sd, &studentID, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &count, sizeof(int));
+    if (read_res < 0 || read_res != sizeof(int))
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("\nYou are currently enrolled in %d courses.\n", count);
+    for (int i = 0; i < count; i++)
+    {
+        read(sd, &searchedEnrollment, sizeof(struct enrollment));
+        printf("\nCourse ID: %d", searchedEnrollment.courseID);
+        printf("\n");
+    }
+    printf("\n");
+    showMenu(sd);
+}
+
+// student change password
+void changeStudentPassword(int sd)
+{
+    int select = 5;
+    bool result;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct student modifyStudent;
+    printf("Enter the Student User ID to change password : ");
+    scanf("%d", &modifyStudent.userID);
+
+    printf("New Password(max 10 characters) : ");
+    char *pass = getpass("");
+    strcpy(modifyStudent.password, pass);
+
+    write_res = write(sd, &modifyStudent, sizeof(struct student));
+    if (write_res < 0 || write_res != sizeof(struct student))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0 || read_res != sizeof(result))
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!result)
+    {
+        printf("Error changing the password,please re-check the User ID!\n\n");
+    }
+    else
+    {
+        printf("\nSuccessfully changed the password!\n\n");
+    }
+    showMenu(sd);
+    return;
+}
+
+// faculty view all offered courses
+void viewOfferedCourses(int sd)
+{
+    int select = 1;
+    int count;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int facultyID;
+    printf("Enter your faculty ID: ");
+    scanf("%d", &facultyID);
+    printf("Entered Faculty ID : %d\n\n", facultyID);
+
+    write_res = write(sd, &facultyID, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &count, sizeof(int));
+    if (read_res < 0 || read_res != sizeof(int))
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("You are currently offering %d courses.\n", count);
+
+    struct course searchedCourse;
+
+    for (int i = 0; i < count; i++)
+    {
+        read(sd, &searchedCourse, sizeof(struct course));
+        printf("\nCourse ID: %d", searchedCourse.courseID);
+        printf("\nCourse Name: %s", searchedCourse.name);
+        printf("\nTotal seats: %d", searchedCourse.seats);
+        printf("\n");
+    }
+
+    printf("\n");
+    showMenu(sd);
+}
+
+// faculty add new course
+void addNewCourse(int sd)
+{
+    int select = 2;
+    bool result;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct course addCourse;
+    printf("Enter the Course ID : ");
+    scanf("%d", &addCourse.courseID);
+    printf("Enter name of the course to add : ");
+    scanf(" %[^\n]", addCourse.name);
+    printf("Enter your faculty ID : ");
+    scanf("%d", &addCourse.facultyID);
+    int seats;
+    printf("Enter number of seats : ");
+    scanf("%d", &seats);
+    addCourse.seats = seats;
+    addCourse.available_seats = seats;
+
+    write_res = write(sd, &addCourse, sizeof(struct course));
+    if (write_res < 0 || write_res != sizeof(struct course))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!result)
+    {
+        printf("Error in adding course,please re-check if you entered details correctly!\n\n");
+    }
+    else
+    {
+        printf("\nSuccessfully added the course!\n\n");
+    }
+
+    showMenu(sd);
+    return;
+}
+
+// faculty remove offered course
+void removeOfferedCourse(int sd)
+{
+    int select = 3;
+    ssize_t write_res;
+    int courseID;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Enter the course ID to delete: ");
+    scanf("%d", &courseID);
+    printf("Entered Course ID : %d\n\n", courseID);
+
+    write_res = write(sd, &courseID, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Course deleted successfully.\n\n");
+
+    showMenu(sd);
+}
+
+// faculty update course details
+void updateCourseDetails(int sd)
+{
+    int select = 4;
+    bool result;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write select to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct course modifyCourse;
+
+    printf("Enter the Course ID to be modified : ");
+    scanf("%d", &modifyCourse.courseID);
+    printf("Enter Updated Name of the Course : ");
+    scanf(" %[^\n]", modifyCourse.name);
+    printf("Enter new number of available seats : ");
+    scanf("%d", &modifyCourse.seats);
+
+    write_res = write(sd, &modifyCourse, sizeof(struct course));
+    if (write_res < 0 || write_res != sizeof(struct course))
+    {
+        perror("write course details to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!result)
+    {
+        printf("Error modifying the course details,please re-check the course ID!\n\n");
+    }
+    else
+    {
+        printf("\nSuccessfully modified the course details!\n\n");
+    }
+
+    showMenu(sd);
+    return;
+}
+
+// faculty change password
+void changeFacultyPassword(int sd)
+{
+    int select = 5;
+    bool result;
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct faculty modifyFaculty;
+    printf("Enter the Faculty User ID to be modified : ");
+    scanf("%d", &modifyFaculty.userID);
+
+    printf("New Password(max 10 characters) : ");
+    char *pass = getpass("");
+    strcpy(modifyFaculty.password, pass);
+
+    write_res = write(sd, &modifyFaculty, sizeof(struct faculty));
+    if (write_res < 0 || write_res != sizeof(struct faculty))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0 || read_res != sizeof(result))
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!result)
+    {
+        printf("Error changing the faculty password,please re-check the User ID!\n\n");
+    }
+    else
+    {
+        printf("\nSuccessfully changed the password!\n\n");
+    }
+    showMenu(sd);
+    return;
+}
+
+// admin add student
 void addStudent(int sd)
 {
     int select = 1;
     bool result;
+    ssize_t write_res, read_res;
     char rdBuff[1000];
     bzero(rdBuff, sizeof(rdBuff));
 
-    write(sd, &select, sizeof(int));
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     struct student newStudent;
     printf("Name of Student: ");
@@ -176,10 +688,25 @@ void addStudent(int sd)
     char *pass = getpass("");
     strcpy(newStudent.password, pass);
 
-    write(sd, &newStudent, sizeof(struct student));
-    read(sd, rdBuff, sizeof(rdBuff));
+    write_res = write(sd, &newStudent, sizeof(struct student));
+    if (write_res < 0 || write_res != sizeof(struct student))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+    read_res = read(sd, rdBuff, sizeof(rdBuff));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
 
-    read(sd, &result, sizeof(result));
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0 || read_res != sizeof(result))
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
 
     if (!result)
     {
@@ -187,51 +714,69 @@ void addStudent(int sd)
     }
     else
     {
-        printf("Succesfully added the student.\n\n");
+        printf("\nSuccessfully added the student.\n\n");
     }
     printf("%s\n", rdBuff);
     showMenu(sd);
     return;
 }
 
-// search student
+// admin search student
 void viewStudent(int sd)
 {
     int select = 2;
     int len;
-    bool result;
-    write(sd, &select, sizeof(int));
+    ssize_t write_res, read_res;
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     struct student searchStudent;
     int userID;
     printf("Enter UserID: ");
     scanf("%d", &userID);
-    write(sd, &userID, sizeof(int));
+
+    write_res = write(sd, &userID, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     len = read(sd, &searchStudent, sizeof(struct student));
 
     if (len == 0)
     {
-        printf("Please re-check the User ID!\n\n");
+        printf("\nPlease re-check the User ID!\n\n");
     }
     else
     {
-        printf("User ID : %d\n", searchStudent.userID);
+        printf("\nUser ID : %d\n", searchStudent.userID);
         printf("Name : %s\n", searchStudent.name);
         printf("Status : %s\n\n", searchStudent.status);
     }
     showMenu(sd);
 }
 
-// add faculty
+// admin add faculty
 void addFaculty(int sd)
 {
     int select = 3;
+    ssize_t write_res, read_res;
     bool result;
     char rdBuff[1000];
     bzero(rdBuff, sizeof(rdBuff));
 
-    write(sd, &select, sizeof(int));
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     struct faculty newFaculty;
     printf("Name of Faculty: ");
@@ -240,10 +785,25 @@ void addFaculty(int sd)
     char *pass = getpass("");
     strcpy(newFaculty.password, pass);
 
-    write(sd, &newFaculty, sizeof(struct faculty));
-    read(sd, rdBuff, sizeof(rdBuff));
+    write_res = write(sd, &newFaculty, sizeof(struct faculty));
+    if (write_res < 0 || write_res != sizeof(struct faculty))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
+    read_res = read(sd, rdBuff, sizeof(rdBuff));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
 
-    read(sd, &result, sizeof(result));
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
 
     if (!result)
     {
@@ -251,26 +811,39 @@ void addFaculty(int sd)
     }
     else
     {
-        printf("Succesfully added the faculty.\n\n");
+        printf("\nSuccessfully added the faculty.\n\n");
     }
     printf("%s\n", rdBuff);
     showMenu(sd);
     return;
 }
 
-// search faculty
+// admin search faculty
 void viewFaculty(int sd)
 {
     int select = 4;
+    ssize_t write_res, read_res;
     int len;
     bool result;
-    write(sd, &select, sizeof(int));
+
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     struct faculty searchFaculty;
     int userID;
     printf("Enter UserID: ");
     scanf("%d", &userID);
-    write(sd, &userID, sizeof(int));
+
+    write_res = write(sd, &userID, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     len = read(sd, &searchFaculty, sizeof(struct faculty));
 
@@ -280,68 +853,101 @@ void viewFaculty(int sd)
     }
     else
     {
-        printf("User ID : %d\n", searchFaculty.userID);
+        printf("\nUser ID : %d\n", searchFaculty.userID);
         printf("Name : %s\n\n", searchFaculty.name);
     }
     showMenu(sd);
 }
 
-// activate student
+// admin activate student
 void activateStudent(int sd)
 {
     int select = 5;
     bool result;
+    ssize_t write_res, read_res;
 
-    write(sd, &select, sizeof(int));
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     struct student activateStudent1;
     printf("Enter the Student User ID to be activated : ");
     scanf("%d", &activateStudent1.userID);
 
-    write(sd, &activateStudent1, sizeof(struct student));
+    write_res = write(sd, &activateStudent1, sizeof(struct student));
+    if (write_res < 0 || write_res != sizeof(struct student))
+    {
+        perror("write to server failed");
+        exit(EXIT_FAILURE);
+    }
 
-    read(sd, &result, sizeof(result));
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
+
     if (!result)
     {
-        printf("Error activating student,please re-check the User ID!\n\n");
+        printf("\nError activating student,please re-check the User ID!\n\n");
     }
     else
     {
-        printf("Succesfully activated the student!\n\n");
+        printf("\nSuccessfully activated the student!\n\n");
     }
 
     showMenu(sd);
     return;
 }
 
-// block student
+// admin block student
 void blockStudent(int sd)
 {
     int select = 6;
     bool result;
+    ssize_t write_res, read_res;
 
-    write(sd, &select, sizeof(int));
+    write_res = write(sd, &select, sizeof(int));
+    if (write_res < 0 || write_res != sizeof(int))
+    {
+        perror("write select to server failed");
+        exit(EXIT_FAILURE);
+    }
 
     struct student blockStudent;
     printf("Enter the Student User ID to be blocked : ");
     scanf("%d", &blockStudent.userID);
 
-    write(sd, &blockStudent, sizeof(struct student));
+    write_res = write(sd, &blockStudent, sizeof(struct student));
+    if (write_res < 0 || write_res != sizeof(struct student))
+    {
+        perror("write student data to server failed");
+        exit(EXIT_FAILURE);
+    }
 
-    read(sd, &result, sizeof(result));
+    read_res = read(sd, &result, sizeof(result));
+    if (read_res < 0)
+    {
+        perror("read from server failed");
+        exit(EXIT_FAILURE);
+    }
     if (!result)
     {
-        printf("Error blocking student,please re-check the User ID!\n\n");
+        printf("\nError blocking student,please re-check the User ID!\n\n");
     }
     else
     {
-        printf("Succesfully blocked the student!\n\n");
+        printf("\nSuccessfully blocked the student!\n\n");
     }
     showMenu(sd);
     return;
 }
 
-// modify student details
+// admin modify student details
 void modifyStudent(int sd)
 {
     int select = 7;
@@ -369,13 +975,13 @@ void modifyStudent(int sd)
     }
     else
     {
-        printf("\nSuccesfully modified the student details!\n\n");
+        printf("\nSuccessfully modified the student details!\n\n");
     }
     showMenu(sd);
     return;
 }
 
-// modify faculty details
+// admin modify faculty details
 void modifyFaculty(int sd)
 {
     int select = 8;
@@ -407,297 +1013,6 @@ void modifyFaculty(int sd)
     }
     showMenu(sd);
     return;
-}
-
-// change student password
-void changeStudentPassword(int sd)
-{
-    int select = 5;
-    bool result;
-
-    write(sd, &select, sizeof(int));
-
-    struct student modifyStudent;
-    printf("Enter the Student User ID to change password : ");
-    scanf("%d", &modifyStudent.userID);
-
-    printf("New Password(max 10 characters) : ");
-    char *pass = getpass("");
-    strcpy(modifyStudent.password, pass);
-
-    write(sd, &modifyStudent, sizeof(struct student));
-
-    read(sd, &result, sizeof(result));
-
-    if (!result)
-    {
-        printf("Error changing the password,please re-check the User ID!\n\n");
-    }
-    else
-    {
-        printf("Succesfully changed the password!\n\n");
-    }
-    showMenu(sd);
-    return;
-}
-
-// change faculty password
-void changeFacultyPassword(int sd)
-{
-    int select = 5;
-    bool result;
-
-    write(sd, &select, sizeof(int));
-
-    struct faculty modifyFaculty;
-    printf("Enter the Faculty User ID to be modified : ");
-    scanf("%d", &modifyFaculty.userID);
-
-    printf("New Password(max 10 characters) : ");
-    char *pass = getpass("");
-    strcpy(modifyFaculty.password, pass);
-
-    write(sd, &modifyFaculty, sizeof(struct faculty));
-
-    read(sd, &result, sizeof(result));
-
-    if (!result)
-    {
-        printf("Error changing the faculty password,please re-check the User ID!\n\n");
-    }
-    else
-    {
-        printf("Succesfully changed the password!\n\n");
-    }
-    showMenu(sd);
-    return;
-}
-
-// faculty add new course
-void addNewCourse(int sd)
-{
-    int select = 2;
-    bool result;
-
-    write(sd, &select, sizeof(int));
-
-    struct course addCourse;
-    printf("Enter the Course ID : ");
-    scanf("%d", &addCourse.courseID);
-    printf("Enter name of the course to add : ");
-    scanf(" %[^\n]", addCourse.name);
-    printf("Enter your faculty ID : ");
-    scanf("%d", &addCourse.facultyID);
-    int seats;
-    printf("Enter number of seats : ");
-    scanf("%d", &seats);
-    addCourse.seats = seats;
-    addCourse.available_seats = seats;
-
-    write(sd, &addCourse, sizeof(struct course));
-    read(sd, &result, sizeof(result));
-
-    if (!result)
-    {
-        printf("Error in adding course,please re-check if you entered details correctly!\n\n");
-    }
-    else
-    {
-        printf("Succesfully added the course!\n\n");
-    }
-
-    showMenu(sd);
-    return;
-}
-
-// faculty update course details
-void updateCourseDetails(int sd)
-{
-    int select = 4;
-    bool result;
-
-    write(sd, &select, sizeof(int));
-
-    struct course modifyCourse;
-    printf("Enter the Course ID to be modified : ");
-    scanf("%d", &modifyCourse.courseID);
-
-    printf("Enter Updated Name of the Course : ");
-    scanf(" %[^\n]", modifyCourse.name);
-    printf("Enter new number of available seats : ");
-    scanf("%d", &modifyCourse.seats);
-
-    write(sd, &modifyCourse, sizeof(struct course));
-
-    read(sd, &result, sizeof(result));
-
-    if (!result)
-    {
-        printf("Error modifying the course details,please re-check the course ID!\n\n");
-    }
-    else
-    {
-        printf("Succesfully modified the course details!\n\n");
-    }
-
-    showMenu(sd);
-    return;
-}
-
-// view courses offered by faculty
-void viewOfferedCourses(int sd)
-{
-    int select = 1;
-    int count;
-
-    write(sd, &select, sizeof(int));
-
-    struct course searchedCourse;
-    int facultyID;
-    printf("Enter your faculty ID: ");
-    scanf("%d", &facultyID);
-    printf("Entered Faculty ID : %d\n\n", facultyID);
-
-    write(sd, &facultyID, sizeof(int));
-
-    read(sd, &count, sizeof(int));
-
-    printf("You are currently offering %d courses.\n", count);
-    for (int i = 0; i < count; i++)
-    {
-        read(sd, &searchedCourse, sizeof(struct course));
-        printf("\nCourse ID: %d", searchedCourse.courseID);
-        printf("\nCourse Name: %s", searchedCourse.name);
-        printf("\nTotal seats: %d", searchedCourse.seats);
-        printf("\n");
-    }
-    printf("\n");
-    showMenu(sd);
-}
-
-// remove offerd course
-void removeOfferedCourse(int sd)
-{
-    int select = 3;
-    write(sd, &select, sizeof(int));
-
-    int courseID;
-
-    printf("Enter the course ID to delete: ");
-    scanf("%d", &courseID);
-    printf("Entered Course ID : %d\n\n", courseID);
-
-    write(sd, &courseID, sizeof(int));
-
-    printf("Course deleted successfully.\n\n");
-
-    showMenu(sd);
-}
-
-// student view all courses
-void viewAllCourses(int sd)
-{
-    int select = 1;
-    int count;
-
-    write(sd, &select, sizeof(int));
-
-    struct course foundCourse;
-
-    read(sd, &count, sizeof(int));
-
-    printf("\nTotal available courses are %d.\n", count);
-    for (int i = 0; i < count; i++)
-    {
-        read(sd, &foundCourse, sizeof(struct course));
-        printf("\nCourse ID: %d", foundCourse.courseID);
-        printf("\nCourse Name: %s", foundCourse.name);
-        printf("\nAvailable Seats: %d", foundCourse.available_seats);
-        printf("\n");
-    }
-    printf("\n");
-    showMenu(sd);
-}
-
-// student enroll into a new course
-void enrollCourse(int sd)
-{
-    int select = 2;
-    bool result;
-    int available_seats = 0;
-    write(sd, &select, sizeof(int));
-
-    struct enrollment enroll;
-    printf("Enter your student ID : ");
-    scanf("%d", &enroll.studentID);
-    printf("Enter Course ID to enroll : ");
-    scanf("%d", &enroll.courseID);
-
-    write(sd, &enroll, sizeof(struct enrollment));
-    read(sd, &available_seats, sizeof(int));
-    printf("\nNumber of available seats: %d\n", available_seats);
-
-    read(sd, &result, sizeof(result));
-
-    if (result == true)
-    {
-        printf("Succesfully enrolled in course!\n\n");
-    }
-    else
-    {
-        printf("Unable to enroll!\n\n");
-    }
-
-    showMenu(sd);
-}
-
-// student unenroll from a course
-void dropCourse(int sd)
-{
-    int select = 3;
-    write(sd, &select, sizeof(int));
-
-    struct enrollment dropEnroll;
-
-    printf("Enter your student ID : ");
-    scanf("%d", &dropEnroll.studentID);
-
-    printf("Enter the course ID you want to drop : ");
-    scanf("%d", &dropEnroll.courseID);
-
-    write(sd, &dropEnroll, sizeof(struct enrollment));
-
-    printf("\nUnenrolled successfully.\n\n");
-
-    showMenu(sd);
-}
-
-// view courses enrolled courses by the student
-void viewEnrolledCourses(int sd)
-{
-    int select = 4;
-    int count = 0;
-
-    write(sd, &select, sizeof(int));
-
-    struct enrollment searchedEnrollment;
-    int studentID;
-    printf("Enter your Student ID: ");
-    scanf("%d", &studentID);
-
-    write(sd, &studentID, sizeof(int));
-
-    read(sd, &count, sizeof(int));
-
-    printf("\nYou are currently enrolled in %d courses.\n", count);
-    for (int i = 0; i < count; i++)
-    {
-        read(sd, &searchedEnrollment, sizeof(struct enrollment));
-        printf("\nCourse ID: %d", searchedEnrollment.courseID);
-        printf("\n");
-    }
-    printf("\n");
-    showMenu(sd);
 }
 
 void showMenu(int sd)
@@ -846,7 +1161,7 @@ void showMenu(int sd)
 int main()
 {
     system("clear");
-    printf("Welcome to Academia\n\n");
+    printf("..........Welcome to Academia..........\n\n");
 
     struct sockaddr_in server;
     int sd, msgLength;
@@ -854,18 +1169,37 @@ int main()
     char result;
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (sd == -1)
+    {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_port = htons(5555);
 
-    connect(sd, (struct sockaddr *)&server, sizeof(server));
+    if (connect(sd, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
+        perror("connection failed");
+        close(sd);
+        exit(EXIT_FAILURE);
+    }
 
-    // Show Intial Login Menu
+    // show initial login menu
     chooseOption(sd);
 
-    // Showing menu after login
+    system("clear");
+
+    // show menu after login
     showMenu(sd);
 
-    close(sd);
+    if (close(sd) < 0)
+    {
+        perror("closing socket failed");
+        exit(EXIT_FAILURE);
+    }
+
     return 0;
 }

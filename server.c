@@ -33,11 +33,15 @@ Description : This file consists of code which listens for client connections
 bool checkAdmin(struct admin currUser)
 {
     int i = currUser.userID;
-    int fd = open("/home/nikhil/Academia/Database/Admin.data", O_RDONLY, 0744);
-    bool result;
+    bool result = false;
     struct admin temp;
+    int fd = open("/home/nikhil/Academia/Database/Admin.data", O_RDONLY, 0744);
+    if (fd == -1)
+    {
+        perror("Error opening file");
+        return false;
+    }
 
-    int fl1;
     struct flock lock;
     lock.l_type = F_RDLCK;
     lock.l_whence = SEEK_SET;
@@ -45,10 +49,31 @@ bool checkAdmin(struct admin currUser)
     lock.l_len = sizeof(struct admin);
     lock.l_pid = getpid();
 
-    fl1 = fcntl(fd, F_SETLKW, &lock);
+    if (fcntl(fd, F_SETLKW, &lock) == -1)
+    {
+        perror("Error locking file");
+        close(fd);
+        return false;
+    }
 
-    lseek(fd, (i) * sizeof(struct admin), SEEK_SET);
-    read(fd, &temp, sizeof(struct admin));
+    if (lseek(fd, (i) * sizeof(struct admin), SEEK_SET) == -1)
+    {
+        perror("Error seeking in file");
+        lock.l_type = F_UNLCK;
+        fcntl(fd, F_SETLK, &lock);
+        close(fd);
+        return false;
+    }
+
+    if (read(fd, &temp, sizeof(struct admin)) != sizeof(struct admin))
+    {
+        perror("Error reading from file");
+        lock.l_type = F_UNLCK;
+        fcntl(fd, F_SETLK, &lock);
+        close(fd);
+        return false;
+    }
+
     if (!strcmp(temp.password, currUser.password))
         result = true;
     else
@@ -68,10 +93,9 @@ void serverTask(int nsd)
     // login verification
     while (1)
     {
-        // read what client has chosen from initial menu
         read(nsd, &option, sizeof(option));
         printf("Option : %d\n", option);
-        // if student
+        // student
         if (option == 1)
         {
             struct student currUser1;
@@ -83,6 +107,7 @@ void serverTask(int nsd)
             result = checkStudent(currUser1);
             write(nsd, &result, sizeof(result));
         }
+        // faculty
         else if (option == 2)
         {
             struct faculty currUser2;
@@ -94,6 +119,7 @@ void serverTask(int nsd)
             result = checkFaculty(currUser2);
             write(nsd, &result, sizeof(result));
         }
+        // admin
         else if (option == 3)
         {
             struct admin currUser3;
@@ -113,7 +139,7 @@ void serverTask(int nsd)
         if (result)
             break;
     }
-    // internal menus
+    // internal menu functions
     while (1)
     {
         read(nsd, &select, sizeof(int));
@@ -137,14 +163,12 @@ void serverTask(int nsd)
                 read(nsd, &removeEnrollment, sizeof(struct enrollment));
                 deleteEnrollment(removeEnrollment, nsd);
             }
-            //
             else if (select == 4)
             {
                 int studentID;
                 read(nsd, &studentID, sizeof(int));
                 viewEnrolledCourses(studentID, nsd);
             }
-            // change student password
             else if (select == 5)
             {
                 struct student modifyStudent;
@@ -158,14 +182,12 @@ void serverTask(int nsd)
         // faculty
         else if (option == 2)
         {
-            // view offered courses
             if (select == 1)
             {
                 int facultyID;
                 read(nsd, &facultyID, sizeof(int));
                 viewOfferedCourses(facultyID, nsd);
             }
-            // faculty add new course
             else if (select == 2)
             {
                 struct course addCourse;
@@ -179,7 +201,6 @@ void serverTask(int nsd)
                 read(nsd, &courseID, sizeof(int));
                 deleteCourse(courseID, nsd);
             }
-            // update course details
             else if (select == 4)
             {
                 struct course modifyCourse;
@@ -187,7 +208,6 @@ void serverTask(int nsd)
                 result = updateCourseDetails(modifyCourse);
                 write(nsd, &result, sizeof(result));
             }
-            // change faculty password
             else if (select == 5)
             {
                 struct faculty modifyFaculty;
