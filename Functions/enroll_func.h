@@ -124,7 +124,7 @@ void viewEnrolledCourses(int studentID, int sd)
         int sID = studentID;
         int count = 0;
 
-        int fd = open("/home/nikhil/Academia/Database/Enroll.data", O_RDONLY, 0744);
+        int fd = open("/home/nikhil/Academia/Database/Enroll.data", O_RDWR | O_CREAT, 0744);
         if (fd == -1)
         {
                 perror("Error opening Enroll.data");

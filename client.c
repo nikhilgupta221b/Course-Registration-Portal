@@ -24,6 +24,25 @@ Description : This file consists of client code which connects to the server
 #include "./Structures/course.h"
 #include "./Structures/enrollment.h"
 
+void red()
+{
+    printf("\033[1;91m");
+}
+void green()
+{
+    printf("\033[1;92m");
+}
+
+void yellow()
+{
+    printf("\033[1;93m");
+}
+
+void reset()
+{
+    printf("\033[0m");
+}
+
 void showMenu(int sd);
 void chooseOption(int sd);
 
@@ -70,12 +89,16 @@ void attemptStudentLogin(int sd)
 
     if (!result)
     {
+        red();
         printf("\nUnable to Login!\nEither your password didn't match or your account is deleted.\n\n");
+        reset();
         chooseOption(sd);
     }
     else
     {
+        green();
         printf("\nSuccessfully logged in!\n\n");
+        reset();
     }
     return;
 }
@@ -121,12 +144,16 @@ void attemptFacultyLogin(int sd)
 
     if (!result)
     {
+        red();
         printf("\nUnable to Login!\nEither your password didn't match or your account is deleted.\n");
+        reset();
         chooseOption(sd);
     }
     else
     {
+        green();
         printf("\nSuccessfully logged in!\n\n");
+        reset();
     }
     return;
 }
@@ -169,12 +196,16 @@ void attemptAdminLogin(int sd)
 
     if (!result)
     {
+        red();
         printf("\nUnable to Login!\nEither your password didn't match or your account is deleted.\n");
+        reset();
         chooseOption(sd);
     }
     else
     {
+        green();
         printf("\nSuccessfully logged in!\n\n");
+        reset();
     }
     return;
 }
@@ -202,7 +233,9 @@ void chooseOption(int sd)
         attemptAdminLogin(sd);
         break;
     default:
+        red();
         printf("Invalid option!\n\n");
+        reset();
         chooseOption(sd);
         break;
     }
@@ -231,7 +264,7 @@ void viewAllCourses(int sd)
         perror("read failed");
         exit(EXIT_FAILURE);
     }
-
+    yellow();
     printf("\nTotal available courses are %d.\n", count);
     for (int i = 0; i < count; i++)
     {
@@ -248,6 +281,9 @@ void viewAllCourses(int sd)
         printf("\n");
     }
     printf("\n");
+
+    reset();
+
     showMenu(sd);
 }
 
@@ -298,11 +334,15 @@ void enrollCourse(int sd)
 
     if (result == true)
     {
+        green();
         printf("Successfully enrolled in course!\n\n");
+        reset();
     }
     else
     {
+        red();
         printf("Unable to enroll!\n\n");
+        reset();
     }
 
     showMenu(sd);
@@ -335,8 +375,9 @@ void dropCourse(int sd)
         perror("write to server failed");
         exit(EXIT_FAILURE);
     }
-
+    green();
     printf("\nUnenrolled successfully.\n\n");
+    reset();
 
     showMenu(sd);
 }
@@ -374,6 +415,7 @@ void viewEnrolledCourses(int sd)
         exit(EXIT_FAILURE);
     }
 
+    yellow();
     printf("\nYou are currently enrolled in %d courses.\n", count);
     for (int i = 0; i < count; i++)
     {
@@ -382,6 +424,8 @@ void viewEnrolledCourses(int sd)
         printf("\n");
     }
     printf("\n");
+    reset();
+
     showMenu(sd);
 }
 
@@ -423,11 +467,15 @@ void changeStudentPassword(int sd)
 
     if (!result)
     {
+        red();
         printf("Error changing the password,please re-check the User ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully changed the password!\n\n");
+        reset();
     }
     showMenu(sd);
     return;
@@ -466,6 +514,7 @@ void viewOfferedCourses(int sd)
         exit(EXIT_FAILURE);
     }
 
+    yellow();
     printf("You are currently offering %d courses.\n", count);
 
     struct course searchedCourse;
@@ -480,6 +529,8 @@ void viewOfferedCourses(int sd)
     }
 
     printf("\n");
+    reset();
+
     showMenu(sd);
 }
 
@@ -526,11 +577,15 @@ void addNewCourse(int sd)
 
     if (!result)
     {
+        red();
         printf("Error in adding course,please re-check if you entered details correctly!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully added the course!\n\n");
+        reset();
     }
 
     showMenu(sd);
@@ -562,8 +617,9 @@ void removeOfferedCourse(int sd)
         exit(EXIT_FAILURE);
     }
 
+    green();
     printf("Course deleted successfully.\n\n");
-
+    reset();
     showMenu(sd);
 }
 
@@ -606,11 +662,15 @@ void updateCourseDetails(int sd)
 
     if (!result)
     {
+        red();
         printf("Error modifying the course details,please re-check the course ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully modified the course details!\n\n");
+        reset();
     }
 
     showMenu(sd);
@@ -655,11 +715,15 @@ void changeFacultyPassword(int sd)
 
     if (!result)
     {
+        red();
         printf("Error changing the faculty password,please re-check the User ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully changed the password!\n\n");
+        reset();
     }
     showMenu(sd);
     return;
@@ -710,11 +774,15 @@ void addStudent(int sd)
 
     if (!result)
     {
+        red();
         printf("Error adding the student record!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully added the student.\n\n");
+        reset();
     }
     printf("%s\n", rdBuff);
     showMenu(sd);
@@ -755,10 +823,13 @@ void viewStudent(int sd)
     }
     else
     {
+        yellow();
         printf("\nUser ID : %d\n", searchStudent.userID);
         printf("Name : %s\n", searchStudent.name);
         printf("Status : %s\n\n", searchStudent.status);
+        reset();
     }
+
     showMenu(sd);
 }
 
@@ -807,11 +878,15 @@ void addFaculty(int sd)
 
     if (!result)
     {
+        red();
         printf("Error adding the faculty record!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully added the faculty.\n\n");
+        reset();
     }
     printf("%s\n", rdBuff);
     showMenu(sd);
@@ -853,8 +928,10 @@ void viewFaculty(int sd)
     }
     else
     {
+        yellow();
         printf("\nUser ID : %d\n", searchFaculty.userID);
         printf("Name : %s\n\n", searchFaculty.name);
+        reset();
     }
     showMenu(sd);
 }
@@ -893,11 +970,15 @@ void activateStudent(int sd)
 
     if (!result)
     {
+        red();
         printf("\nError activating student,please re-check the User ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully activated the student!\n\n");
+        reset();
     }
 
     showMenu(sd);
@@ -937,11 +1018,15 @@ void blockStudent(int sd)
     }
     if (!result)
     {
+        red();
         printf("\nError blocking student,please re-check the User ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully blocked the student!\n\n");
+        reset();
     }
     showMenu(sd);
     return;
@@ -971,11 +1056,15 @@ void modifyStudent(int sd)
 
     if (!result)
     {
+        red();
         printf("Error modifying the student details,please re-check the User ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccessfully modified the student details!\n\n");
+        reset();
     }
     showMenu(sd);
     return;
@@ -1005,11 +1094,15 @@ void modifyFaculty(int sd)
 
     if (!result)
     {
+        red();
         printf("Error modifying the faculty details,please re-check the User ID!\n\n");
+        reset();
     }
     else
     {
+        green();
         printf("\nSuccesfully modified the faculty details!\n\n");
+        reset();
     }
     showMenu(sd);
     return;
